@@ -37,12 +37,7 @@ def convert_to_feature(dlc_root, yolo_root, save_dir, video_name, tstamp, frame_
         print("File not found", dlc_file)
         return
     dlc_np = np.load(dlc_file)
-    dlc_np = dlc_np.reshape(-1, 2, 8)
-    dlc_np = dlc_np.transpose(1, 0, 2)
-    dlc_np1 = dlc_np[0]*frame_width
-    dlc_np2 = dlc_np[1]*frame_height
-    dlc_np = np.stack((dlc_np1, dlc_np2), axis=0)
-    dlc_np = dlc_np.transpose(1, 2, 0)
+    dlc_np = dlc_np.transpose(0, 2, 1)
     
     # ----- Remove cockroach data from DeepLabCut data -----
     dlc_np = np.delete(dlc_np, 6, axis=1)
@@ -53,7 +48,7 @@ def convert_to_feature(dlc_root, yolo_root, save_dir, video_name, tstamp, frame_
     yolo_np = yolo_np.transpose(1, 0)
     temp_np = []
     for i in range(len(xy_pair)):
-        __temp = [yolo_np[xy_pair[i][0]]*((frame_width+yolo_np[dim_xy_pair[i][0]]*frame_width/2) if dim_xy_pair[i][0]>0 else 0), yolo_np[xy_pair[i][1]]*((frame_width+yolo_np[dim_xy_pair[i][0]]*frame_height/2) if dim_xy_pair[i][1]>0 else 0)]
+        __temp = [(yolo_np[xy_pair[i][0]]*frame_width+((yolo_np[dim_xy_pair[i][0]]*frame_width) if dim_xy_pair[i][0]>0 else (yolo_np[xy_pair[i][0]]*frame_width)))/2, (yolo_np[xy_pair[i][1]]*frame_width+((yolo_np[dim_xy_pair[i][1]]*frame_height/2) if dim_xy_pair[i][1]>0 else yolo_np[xy_pair[i][1]]*frame_width))/2]
         temp_np.append(__temp)
     # yolo_np = np.array([[yolo_np[0]*frame_width, yolo_np[1]*frame_height], [yolo_np[4]*frame_width, yolo_np[5]*frame_height], [yolo_np[8]*frame_width, yolo_np[9]*frame_height]])
     yolo_np = np.array(temp_np).transpose(2, 0, 1)
